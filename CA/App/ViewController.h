@@ -6,9 +6,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "../UIProps.h"
 
 @interface ViewController : UIViewController
 
-
 @end
-
