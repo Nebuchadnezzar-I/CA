@@ -18,6 +18,52 @@
 @implementation ViewController
 
 - (void)app {
+    // MARK: BG
+    CALayer *map = [CALayer new];
+    map.frame = CGRectMake(-1900, -1400, 4000, 4000);
+    
+    UIImage *mapImage = [UIImage imageNamed:@"Map"];
+    map.contents = (__bridge id)mapImage.CGImage;
+    map.contentsGravity = kCAGravityResizeAspect;
+    map.contentsScale = [UIScreen mainScreen].scale;
+
+    [self.view.layer addSublayer:map];
+    
+    // MARK: Planes
+    UIImage *planeImg = [UIImage imageNamed:@"Plane"];
+
+    CALayer *plane_1 = [CALayer new];
+    plane_1.frame = CGRectMake(150, 160, 32, 32);
+    plane_1.contents = (__bridge id)planeImg.CGImage;
+    plane_1.contentsGravity = kCAGravityResizeAspect;
+    plane_1.contentsScale = [UIScreen mainScreen].scale;
+    plane_1.transform = CATransform3DMakeRotation(27 * (M_PI / 180.0), 0, 0, 1);
+    [self.view.layer addSublayer:plane_1];
+    
+    CALayer *plane_2 = [CALayer new];
+    plane_2.frame = CGRectMake(240, 220, 32, 32);
+    plane_2.contents = (__bridge id)planeImg.CGImage;
+    plane_2.contentsGravity = kCAGravityResizeAspect;
+    plane_2.contentsScale = [UIScreen mainScreen].scale;
+    plane_2.transform = CATransform3DMakeRotation(50 * (M_PI / 180.0), 0, 0, 1);
+    [self.view.layer addSublayer:plane_2];
+    
+    CALayer *plane_3 = [CALayer new];
+    plane_3.frame = CGRectMake(90, 240, 32, 32);
+    plane_3.contents = (__bridge id)planeImg.CGImage;
+    plane_3.contentsGravity = kCAGravityResizeAspect;
+    plane_3.contentsScale = [UIScreen mainScreen].scale;
+    plane_3.transform = CATransform3DMakeRotation(160 * (M_PI / 180.0), 0, 0, 1);
+    [self.view.layer addSublayer:plane_3];
+    
+    CALayer *plane_4 = [CALayer new];
+    plane_4.frame = CGRectMake(310, 150, 32, 32);
+    plane_4.contents = (__bridge id)planeImg.CGImage;
+    plane_4.contentsGravity = kCAGravityResizeAspect;
+    plane_4.contentsScale = [UIScreen mainScreen].scale;
+    plane_4.transform = CATransform3DMakeRotation(160 * (M_PI / 180.0), 0, 0, 1);
+    [self.view.layer addSublayer:plane_4];
+
     // MARK: Header
     CALayer *search = [CALayer new];
     search.frame = CGRectMake(24.0f, 72.0f, sw - 24.0f * 2, 64.0f);
@@ -88,12 +134,22 @@
     
     // Left button
     UIFont *lbFont = [ViewController searchFontWithSize:14.0f];
+    UIFont *mdFont = [ViewController searchFontWithSize:18.0f];
     NSString *tfText = @"Trending flights";
     NSString *fnyText = @"Flights near you";
+    NSString *flignIDText = @"TVF6474";
+    NSString *flignOtherIDText = @"TO6474";
+    NSString *flignOtherOtherIDText = @"B738";
 
     CGFloat tfHeight = [ViewController heightForText:tfText font:lbFont maxWidth:200.0f];
     CGFloat fnyHeight = [ViewController heightForText:fnyText font:lbFont maxWidth:200.0f];
+    CGFloat flignIDTextHeight = [ViewController heightForText:flignIDText font:mdFont maxWidth:200.0f];
+    
+    CGFloat flightOtherIDTextHeight = [ViewController heightForText:flignOtherIDText font:lbFont maxWidth:200.0f];
+    CGFloat flightOtherIDTextWidth  = [ViewController widthForText:flignOtherIDText font:lbFont maxWidth:200.0f];
 
+    CGFloat flightOtherOtherIDTextHeight = [ViewController heightForText:flignOtherOtherIDText font:lbFont maxWidth:200.0f];
+    CGFloat flightOtherOtherIDTextWidth = [ViewController widthForText:flignOtherOtherIDText font:lbFont maxWidth:200.0f];
 
     CALayer *lbTextLayer = [CALayer new];
     lbTextLayer.frame = CGRectMake(16 + 4, sh - 64.0 - 56.0 - 56.0 - 48.0 - 156.0 - 8.0 - 156.0 - 16.0 + 3, (sw - 16.0f * 2) / 2 - 6, 50.0f);
@@ -154,13 +210,50 @@
     
     // MARK: Posts
     // TODO: Finish xD
+    CGFloat top = sh - 64 - 56 - 156 - 156 - 8 - 48;
 
     CALayer *firstRes = [CALayer new];
-    firstRes.frame = CGRectMake(16.0f, sh - 64 - 56 - 156 - 156 - 8 - 48, sw - 32.0f, 156.0f);
+    firstRes.frame = CGRectMake(16.0f, top, sw - 32.0f, 156.0f);
     firstRes.backgroundColor = [UIColor colorNamed:@"Secondary"].CGColor;
     firstRes.cornerRadius = 24;
     firstRes.masksToBounds = true;
     [self.view.layer addSublayer:firstRes];
+    
+    UIImage *flightImg = [UIImage imageNamed:@"FlightT"];
+    CALayer *flight_logo= [CALayer new];
+    flight_logo.frame = CGRectMake(16 + 24, top + 24, 32, 32);
+    flight_logo.contents = (__bridge id)flightImg.CGImage;
+    flight_logo.contentsGravity = kCAGravityResizeAspect;
+    flight_logo.contentsScale = [UIScreen mainScreen].scale;
+    [self.view.layer addSublayer:flight_logo];
+    
+    CATextLayer *flightID = [CATextLayer layer];
+    flightID.frame = CGRectMake(16 + 24 + 32 + 8, top + 24 + (32 - flignIDTextHeight) / 2, 200, flignIDTextHeight);
+    flightID.string = @"TVF6474";
+    flightID.foregroundColor = [UIColor whiteColor].CGColor;
+    flightID.font = (__bridge CFTypeRef)mdFont;
+    flightID.fontSize = mdFont.pointSize;
+    flightID.contentsScale = [UIScreen mainScreen].scale;
+    flightID.alignmentMode = kCAAlignmentLeft;
+    flightID.truncationMode = kCATruncationEnd;
+    [self.view.layer addSublayer:flightID];
+    
+    CATextLayer *flightOtherID = [CATextLayer layer];
+    flightOtherID.frame = CGRectMake(16 + 24 + 32 + 8, top + 24 + (32 - flignIDTextHeight) / 2, 200, flignIDTextHeight);
+    flightOtherID.string = @"TVF6474";
+    flightOtherID.foregroundColor = [UIColor whiteColor].CGColor;
+    flightOtherID.font = (__bridge CFTypeRef)mdFont;
+    flightOtherID.fontSize = mdFont.pointSize;
+    flightOtherID.contentsScale = [UIScreen mainScreen].scale;
+    flightOtherID.alignmentMode = kCAAlignmentLeft;
+    flightOtherID.truncationMode = kCATruncationEnd;
+    [self.view.layer addSublayer:flightOtherID];
+    
+    CALayer *blackOtherOtherID = [CALayer new];
+    blackOtherOtherID.frame = CGRectMake(sw - flightOtherOtherIDTextWidth, top + 24 + (32 - flightOtherOtherIDTextHeight) / 2, flightOtherOtherIDTextWidth + 32, flightOtherOtherIDTextHeight);
+    blackOtherOtherID.backgroundColor = [UIColor redColor].CGColor;
+    [self.view.layer addSublayer:blackOtherOtherID];
+    //
     
     CALayer *secondRes = [CALayer new];
     secondRes.frame = CGRectMake(16.0f, sh - 64 - 56 - 156 - 48, sw - 32.0f, 156.0f);
@@ -195,7 +288,7 @@
     [self.view.layer addSublayer:searchNavLayer];
 
     CALayer *searchIcon = [CALayer layer];
-    searchIcon.frame = CGRectMake(18.0f, 18.0f, 20.0f, 20.0f); // centered inside 56x56
+    searchIcon.frame = CGRectMake(18.0f, 18.0f, 20.0f, 20.0f);
     searchIcon.contents = (__bridge id)[UIImage imageNamed:@"Search"].CGImage;
     searchIcon.contentsGravity = kCAGravityResizeAspect;
     searchIcon.contentsScale = UIScreen.mainScreen.scale;
@@ -236,6 +329,14 @@
 
 + (UIFont *)searchFontWithSize:(CGFloat)size {
     return [UIFont systemFontOfSize:size weight:UIFontWeightRegular];
+}
+
++ (CGFloat)widthForText:(NSString *)text font:(UIFont *)font maxWidth:(CGFloat)maxWidth {
+    CGRect rect = [text boundingRectWithSize:CGSizeMake(maxWidth, CGFLOAT_MAX)
+                                     options:NSStringDrawingUsesLineFragmentOrigin
+                                  attributes:@{NSFontAttributeName: font}
+                                     context:nil];
+    return ceil(rect.size.width); // ✅ returns CGFloat
 }
 
 + (CGFloat)heightForText:(NSString *)text font:(UIFont *)font maxWidth:(CGFloat)width {
