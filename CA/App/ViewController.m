@@ -7,118 +7,253 @@
 
 #import "ViewController.h"
 
-#define DISABLE_ANIMATION_START [CATransaction begin]; \
-                                [CATransaction setDisableActions:YES];
-
-#define DISABLE_ANIMATION_END   [CATransaction commit];
 
 @interface ViewController () {
-    // MARK: LIB
-    // UI
-    NSMutableDictionary *dict;
-    BOOL needsReappend;
-    CADisplayLink *dl;
     CGFloat sw, sh;
-    
-    // INPUT
-    // IMPROVEMENT:
-    // I may not need nothing more than position for each of the touches
-    NSSet<UITouch *> *touches;
-    BOOL isTouched;
-    
-    // MARK: Extenders
-    // Assets
-    UIFont *fontRegular;
-    
-    // MARK: Builder
-    ColorAnimation topLeftColorAnim;
-    UIColor *currentTopLeftBoxColor;
-    UIColor *topLeftTargetColor;
 }
+
 @end
+
 
 @implementation ViewController
 
-// TODO: ->
-// Modifiers
-- (void)loop {
-    UITouch *currentTouch = touches.allObjects.firstObject;
-    CGFloat x = [currentTouch locationInView:self.view].x;
-    CGFloat y = [currentTouch locationInView:self.view].y;
+- (void)app {
+    // MARK: Header
+    CALayer *search = [CALayer new];
+    search.frame = CGRectMake(24.0f, 72.0f, sw - 24.0f * 2, 64.0f);
+    search.backgroundColor = [UIColor colorNamed:@"Component"].CGColor;
+    search.cornerRadius = 32.0f;
+    search.masksToBounds = true;
+    [self.view.layer addSublayer:search];
     
-    UIColor *target = (x < sw / 2 && y < sh / 2) ? [UIColor grayColor] : [UIColor blackColor];
-    if (topLeftTargetColor != target) {
-        [self startColorTransitionFrom:currentTopLeftBoxColor to:target duration:0.15];
-        topLeftTargetColor = target;
-    }
-    
-    if (topLeftColorAnim.active) {
-        CFTimeInterval now = CACurrentMediaTime();
-        CFTimeInterval elapsed = now - topLeftColorAnim.start;
-        CGFloat t = MIN(elapsed / topLeftColorAnim.duration, 1.0);
-        
-        CGFloat r1, g1, b1, a1;
-        CGFloat r2, g2, b2, a2;
-        
-        [topLeftColorAnim.from getRed:&r1 green:&g1 blue:&b1 alpha:&a1];
-        [topLeftColorAnim.to getRed:&r2 green:&g2 blue:&b2 alpha:&a2];
-        
-        currentTopLeftBoxColor = [UIColor colorWithRed:(r1 + (r2 - r1) * t)
-                                          green:(g1 + (g2 - g1) * t)
-                                           blue:(b1 + (b2 - b1) * t)
-                                          alpha:(a1 + (a2 - a1) * t)];
-        
-        if (t >= 1.0) {
-            topLeftColorAnim.active = NO;
-        }
-    }
+    //
+    CALayer *searchImageLayer = [CALayer layer];
+    searchImageLayer.frame = CGRectMake(24.0f + 24.0f, 72.0f + 22.0f, 20.0f, 20.0f);
 
-        
-    [self
-        createTextLayer:@"Admiral"
-        frame:CGRectMake(50.0f, 50.0f, 50.0f, 20.0f)
-        state:[self
-            labelState:@"Admiral Capo"
-            font:fontRegular
-            foreground:[UIColor blackColor]
-            alignment:kCAAlignmentLeft
-            zIndex:5]];
-    
-    [self
-        createLayer:@"YellowLayer"
-        frame:CGRectMake(0.0f, 0, sw / 2, sh / 2)
-        state:[self
-            layerState:currentTopLeftBoxColor]];
-    
-    [self
-        createLayer:@"BlueLayer"
-        frame:CGRectMake(sw / 2, 0.0f, sw / 2, sh / 2)
-        state:[self
-            layerState:[UIColor blueColor]]];
+    UIImage *searchImage = [UIImage imageNamed:@"Search"];
+    searchImageLayer.contents = (__bridge id)searchImage.CGImage;
+    searchImageLayer.contentsGravity = kCAGravityResizeAspect;
+    searchImageLayer.contentsScale = [UIScreen mainScreen].scale;
 
-    [self
-        createLayer:@"RedLayer"
-        frame:CGRectMake(0.0f, sh / 2, sw / 2, sh / 2)
-        state:[self
-            layerState:[UIColor redColor]]];
-
-    [self
-        createLayer:@"GreenLayer"
-        frame:CGRectMake(sw / 2, sh / 2, sw / 2, sh / 2)
-        state:[self
-            layerState:[UIColor greenColor]]];
-
-    [self append];
+    [self.view.layer addSublayer:searchImageLayer];
+    //
     
-    NSLog(@"FPS %f", 1 / (dl.targetTimestamp - dl.timestamp));
+    //
+    UIFont *font = [ViewController searchFontWithSize:17.0f];
+    CGFloat height = [ViewController heightForText:@"Search" font:font maxWidth:200.0f];
+    
+    CATextLayer *searchTextLayer = [CATextLayer layer];
+    searchTextLayer.frame = CGRectMake(84.0f, 72.0f + (64.0f - height) / 2, 200.0f, height);
+    searchTextLayer.string = @"Search";
+    searchTextLayer.font = (__bridge CFTypeRef)[UIFont systemFontOfSize:17.0f];
+    searchTextLayer.fontSize = 17.0f;
+    searchTextLayer.foregroundColor = [UIColor labelColor].CGColor;
+    searchTextLayer.contentsScale = [UIScreen mainScreen].scale;
+    searchTextLayer.alignmentMode = kCAAlignmentLeft;
+    searchTextLayer.truncationMode = kCATruncationEnd;
+
+    [self.view.layer addSublayer:searchTextLayer];
+    //
+    
+    //
+    CALayer *optionsImageLayer = [CALayer layer];
+    optionsImageLayer.frame = CGRectMake(sw - 22.0f - 24.0f - 24.0f, 72.0f + 23.0f, 22.0f, 18.0f);
+
+    UIImage *optionsImage = [UIImage imageNamed:@"Options"];
+    optionsImageLayer.contents = (__bridge id)optionsImage.CGImage;
+    optionsImageLayer.contentsGravity = kCAGravityResizeAspect;
+    optionsImageLayer.contentsScale = [UIScreen mainScreen].scale;
+
+    [self.view.layer addSublayer:optionsImageLayer];
+    //
+    
+    // MARK: body
+    CALayer *mainBody = [CALayer new];
+    mainBody.frame = CGRectMake(0.0f, sh - 64.0 - 56.0 - 56.0 - 48.0 - 156.0 - 8.0 - 156.0 - 16.0 - 16.0f, sw, 576 + 32);
+    mainBody.backgroundColor = [UIColor colorNamed:@"Component"].CGColor;
+    mainBody.cornerRadius = 48.0f;
+    mainBody.masksToBounds = true;
+    
+    [self.view.layer addSublayer:mainBody];
+    //
+    
+    // Selector
+    CALayer *flightSelector = [CALayer new];
+    flightSelector.frame = CGRectMake(16.0f, sh - 64.0 - 56.0 - 56.0 - 48.0 - 156.0 - 8.0 - 156.0 - 16.0, sw - 16.0f * 2, 56.0f);
+    flightSelector.backgroundColor = [UIColor colorNamed:@"Secondary"].CGColor;
+    flightSelector.cornerRadius = 28.0f;
+    flightSelector.masksToBounds = true;
+    [self.view.layer addSublayer:flightSelector];
+    //
+    
+    // Left button
+    UIFont *lbFont = [ViewController searchFontWithSize:14.0f];
+    NSString *tfText = @"Trending flights";
+    NSString *fnyText = @"Flights near you";
+
+    CGFloat tfHeight = [ViewController heightForText:tfText font:lbFont maxWidth:200.0f];
+    CGFloat fnyHeight = [ViewController heightForText:fnyText font:lbFont maxWidth:200.0f];
+
+
+    CALayer *lbTextLayer = [CALayer new];
+    lbTextLayer.frame = CGRectMake(16 + 4, sh - 64.0 - 56.0 - 56.0 - 48.0 - 156.0 - 8.0 - 156.0 - 16.0 + 3, (sw - 16.0f * 2) / 2 - 6, 50.0f);
+    lbTextLayer.backgroundColor = [UIColor whiteColor].CGColor;
+    lbTextLayer.cornerRadius = 24.0f;
+    lbTextLayer.masksToBounds = true;
+
+    [self.view.layer addSublayer:lbTextLayer];
+    //
+    
+    // right button
+    CALayer *rbTextLayer = [CALayer new];
+    rbTextLayer.frame = CGRectMake((sw - 16.0f * 2) / 2 + 16 + 2, sh - 64.0 - 56.0 - 56.0 - 48.0 - 156.0 - 8.0 - 156.0 - 16.0 + 3, (sw - 16.0f * 2) / 2 - 6, 50.0f);
+    rbTextLayer.cornerRadius = 24.0f;
+    rbTextLayer.masksToBounds = true;
+
+    [self.view.layer addSublayer:rbTextLayer];
+    //
+    
+    // Left button text
+    CATextLayer *lbLabel = [CATextLayer layer];
+    lbLabel.string = tfText;
+    lbLabel.font = (__bridge CFTypeRef)lbFont;
+    lbLabel.fontSize = 14.0f;
+    lbLabel.foregroundColor = [UIColor labelColor].CGColor;
+    lbLabel.contentsScale = [UIScreen mainScreen].scale;
+    lbLabel.alignmentMode = kCAAlignmentCenter;
+    lbLabel.truncationMode = kCATruncationEnd;
+    lbLabel.foregroundColor = [UIColor colorNamed:@"Component"].CGColor;
+
+    CGFloat lbTextY = lbTextLayer.frame.origin.y + (lbTextLayer.frame.size.height - tfHeight) / 2.0f;
+    lbLabel.frame = CGRectMake(
+        lbTextLayer.frame.origin.x,
+        lbTextY,
+        lbTextLayer.frame.size.width,
+        tfHeight
+    );
+    [self.view.layer addSublayer:lbLabel];
+
+    // Right button text
+    CATextLayer *rbLabel = [CATextLayer layer];
+    rbLabel.string = fnyText;
+    rbLabel.font = (__bridge CFTypeRef)lbFont;
+    rbLabel.fontSize = 14.0f;
+    rbLabel.foregroundColor = [UIColor whiteColor].CGColor;
+    rbLabel.contentsScale = [UIScreen mainScreen].scale;
+    rbLabel.alignmentMode = kCAAlignmentCenter;
+    rbLabel.truncationMode = kCATruncationEnd;
+
+    CGFloat rbTextY = rbTextLayer.frame.origin.y + (rbTextLayer.frame.size.height - fnyHeight) / 2.0f;
+    rbLabel.frame = CGRectMake(
+        rbTextLayer.frame.origin.x,
+        rbTextY,
+        rbTextLayer.frame.size.width,
+        fnyHeight
+    );
+    [self.view.layer addSublayer:rbLabel];
+    
+    // MARK: Posts
+    // TODO: Finish xD
+
+    CALayer *firstRes = [CALayer new];
+    firstRes.frame = CGRectMake(16.0f, sh - 64 - 56 - 156 - 156 - 8 - 48, sw - 32.0f, 156.0f);
+    firstRes.backgroundColor = [UIColor colorNamed:@"Secondary"].CGColor;
+    firstRes.cornerRadius = 24;
+    firstRes.masksToBounds = true;
+    [self.view.layer addSublayer:firstRes];
+    
+    CALayer *secondRes = [CALayer new];
+    secondRes.frame = CGRectMake(16.0f, sh - 64 - 56 - 156 - 48, sw - 32.0f, 156.0f);
+    secondRes.backgroundColor = [UIColor colorNamed:@"Secondary"].CGColor;
+    secondRes.cornerRadius = 24;
+    secondRes.masksToBounds = true;
+    [self.view.layer addSublayer:secondRes];
+    
+    // MARK: Footer
+    CGFloat center = sw / 2;
+    
+    CALayer *homeNavLayer = [CALayer layer];
+    homeNavLayer.frame = CGRectMake(center - 148.0f, sh - 120.0f, 56.0f, 56.0f);
+    homeNavLayer.backgroundColor = UIColor.whiteColor.CGColor;
+    homeNavLayer.cornerRadius = 28.0f;
+    homeNavLayer.masksToBounds = YES;
+    [self.view.layer addSublayer:homeNavLayer];
+
+    CALayer *icon = [CALayer layer];
+    icon.frame = CGRectMake(18.0f, 17.0f, 20.0f, 22.0f);
+    icon.contents = (__bridge id)[UIImage imageNamed:@"Home"].CGImage;
+    icon.contentsGravity = kCAGravityResizeAspect;
+    icon.contentsScale = UIScreen.mainScreen.scale;
+    [homeNavLayer addSublayer:icon];
+
+    //
+    
+    CALayer *searchNavLayer = [CALayer layer];
+    searchNavLayer.frame = CGRectMake(center - 56 - 12, sh - 64.0 - 56.0, 56.0f, 56.0f);
+    searchNavLayer.cornerRadius = 28.0f;
+    searchNavLayer.masksToBounds = YES;
+    [self.view.layer addSublayer:searchNavLayer];
+
+    CALayer *searchIcon = [CALayer layer];
+    searchIcon.frame = CGRectMake(18.0f, 18.0f, 20.0f, 20.0f); // centered inside 56x56
+    searchIcon.contents = (__bridge id)[UIImage imageNamed:@"Search"].CGImage;
+    searchIcon.contentsGravity = kCAGravityResizeAspect;
+    searchIcon.contentsScale = UIScreen.mainScreen.scale;
+    [searchNavLayer addSublayer:searchIcon];
+
+    //
+    
+    CALayer *saveNavLayer = [CALayer layer];
+    saveNavLayer.frame = CGRectMake(center + 12.0f, sh - 64.0f - 56.0f, 56.0f, 56.0f);
+    saveNavLayer.cornerRadius = 28.0f;
+    saveNavLayer.masksToBounds = YES;
+    [self.view.layer addSublayer:saveNavLayer];
+
+    CALayer *saveIcon = [CALayer layer];
+    saveIcon.frame = CGRectMake(20.0f, 18.0f, 16.0f, 20.0f);
+    saveIcon.contents = (__bridge id)[UIImage imageNamed:@"Save"].CGImage;
+    saveIcon.contentsGravity = kCAGravityResizeAspect;
+    saveIcon.contentsScale = UIScreen.mainScreen.scale;
+    [saveNavLayer addSublayer:saveIcon];
+    
+    //
+    
+    CALayer *userNavLayer = [CALayer layer];
+    userNavLayer.frame = CGRectMake(center + 12.0f + 56.0f + 24.0f, sh - 64.0f - 56.0f, 56.0f, 56.0f);
+    userNavLayer.cornerRadius = 28.0f;
+    userNavLayer.masksToBounds = YES;
+    [self.view.layer addSublayer:userNavLayer];
+
+    CALayer *userIcon = [CALayer layer];
+    userIcon.frame = CGRectMake(18.0f, 16.5f, 20.0f, 23.0f);
+    userIcon.contents = (__bridge id)[UIImage imageNamed:@"User"].CGImage;
+    userIcon.contentsGravity = kCAGravityResizeAspect;
+    userIcon.contentsScale = UIScreen.mainScreen.scale;
+    [userNavLayer addSublayer:userIcon];
+    
+    //
 }
 
-- (void)startColorTransitionFrom:(UIColor *)from to:(UIColor *)to duration:(CGFloat)duration {
-    topLeftColorAnim.active = YES;
-    topLeftColorAnim.start = CACurrentMediaTime();
-    topLeftColorAnim.duration = duration;
-    topLeftColorAnim.from = from;
-    topLeftColorAnim.to = to;
++ (UIFont *)searchFontWithSize:(CGFloat)size {
+    return [UIFont systemFontOfSize:size weight:UIFontWeightRegular];
+}
+
++ (CGFloat)heightForText:(NSString *)text font:(UIFont *)font maxWidth:(CGFloat)width {
+    NSDictionary *attrs = @{NSFontAttributeName: font};
+    CGRect rect = [text boundingRectWithSize:CGSizeMake(width, CGFLOAT_MAX)
+                                     options:NSStringDrawingUsesLineFragmentOrigin
+                                  attributes:attrs
+                                     context:nil];
+    return ceil(rect.size.height);
+}
+
++ (CGFloat)widthForText:(NSString *)text font:(UIFont *)font {
+    NSDictionary *attributes = @{NSFontAttributeName: font};
+    CGRect rect = [text boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX)
+                                     options:NSStringDrawingUsesLineFragmentOrigin
+                                  attributes:attributes
+                                     context:nil];
+    return ceil(rect.size.width);
 }
 
 - (void)viewDidLoad {
@@ -126,120 +261,10 @@
 
     self.view.backgroundColor = [UIColor colorNamed:@"Background"];
     
-    dl = [CADisplayLink displayLinkWithTarget:self selector:@selector(loop)];
-    [dl addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
-
     sw = [UIScreen mainScreen].bounds.size.width;
     sh = [UIScreen mainScreen].bounds.size.height;
-
-    dict = [[NSMutableDictionary alloc] initWithCapacity:4];
     
-    // Fonts
-    fontRegular = [UIFont systemFontOfSize:16 weight:UIFontWeightRegular];
-    
-    // Builder
-    currentTopLeftBoxColor = [UIColor grayColor];
-}
-
-// MARK: LIB
-
-// State
-// TODO(Michal): Possible memory leak
-- (UIState *)
-    labelState:(NSString *)text font:(UIFont *)font foreground:(UIColor *)foreground
-    alignment:(NSString *)align zIndex:(CGFloat)zIndex {
-    DISABLE_ANIMATION_START
-    
-    UIState *state = malloc(sizeof(UIState));
-    state->tag = LabelState;
-    state->label.text = text;
-    state->label.font = font;
-    state->label.foreground = foreground;
-    state->label.align = align;
-    state->label.zIndex = zIndex;
-    
-    DISABLE_ANIMATION_END
-    return state;
-}
-
-- (UIState *) layerState:(UIColor *)background {
-    DISABLE_ANIMATION_START
-    
-    UIState *state = malloc(sizeof(UIState));
-    state->tag = LayerState;
-    state->layer.backround = background;
-    
-    DISABLE_ANIMATION_END
-    return state;
-}
-
-// UI
-- (CATextLayer *)
-    createTextLayer:(NSString *)name frame:(CGRect)frame
-    state:(struct UIState *)state {
-    DISABLE_ANIMATION_START
-    
-    CATextLayer *tl = dict[name];
-    if (!tl) {
-        tl = [CATextLayer new];
-        dict[name] = tl;
-        needsReappend = true;
-    }
-    
-    tl.string = state->label.text;
-    tl.font = (__bridge CFTypeRef)state->label.font;
-    tl.fontSize = state->label.font.pointSize;
-    tl.foregroundColor = state->label.foreground.CGColor;
-    tl.frame = frame;
-    tl.contentsScale = [UIScreen mainScreen].scale;
-    tl.zPosition = state->label.zIndex;
-
-    DISABLE_ANIMATION_END
-    return tl;
-}
-
-- (CALayer *)createLayer:(NSString *)name frame:(CGRect)frame state:(struct UIState *)s {
-    CALayer *cl = dict[name];
-    if (!cl) {
-        cl = [CALayer new];
-        dict[name] = cl;
-        needsReappend = true;
-    }
-    
-    DISABLE_ANIMATION_START
-    
-    cl.frame = frame;
-    cl.backgroundColor = s->layer.backround.CGColor;
-    
-    DISABLE_ANIMATION_END
-    return cl;
-}
-
-// Input
-- (void)touchesBegan:(NSSet<UITouch *> *)ts withEvent:(UIEvent *)event {
-    touches = ts;
-    isTouched = true;
-}
-
--(void)touchesMoved:(NSSet<UITouch *> *)ts withEvent:(UIEvent *)event {
-    touches = ts;
-    isTouched = true;
-}
-
--(void)touchesEnded:(NSSet<UITouch *> *)ts withEvent:(UIEvent *)event {
-    isTouched = false;
-}
-
-// Rest
-
-- (void)append {
-    if (!needsReappend) return;
-    
-    self.view.layer.sublayers = nil;
-    
-    for (CALayer *o in [dict allValues]) {
-        [self.view.layer addSublayer:o];
-    }
+    [self app];
 }
 
 @end
