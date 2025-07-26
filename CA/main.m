@@ -5,8 +5,8 @@
 //  Created by Michal Ukropec on 18/7/25.
 //
 
-#import "App/ViewController.h"
 #import <UIKit/UIKit.h>
+#import "./VC/ViewController.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 @property(strong, nonatomic) UIWindow *window;

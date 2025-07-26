@@ -6,7 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0B5D40582E35354300F242B4 /* RevealServer.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B5D40572E35354300F242B4 /* RevealServer.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		0B5D40592E35354300F242B4 /* RevealServer.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0B5D40572E35354300F242B4 /* RevealServer.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0B5D405A2E35354300F242B4 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				0B5D40592E35354300F242B4 /* RevealServer.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0B5D40572E35354300F242B4 /* RevealServer.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:2V82U7HN27:Itty Bitty Labs Pty Ltd"; lastKnownFileType = wrapper.xcframework; name = RevealServer.xcframework; path = "../../../Library/Application Support/Reveal/RevealServer/RevealServer.xcframework"; sourceTree = "<group>"; };
 		0BA1CFEB2E2ABCF6003BA9A8 /* CA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CA.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -36,16 +56,26 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B5D40582E35354300F242B4 /* RevealServer.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0B5D40562E35354300F242B4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0B5D40572E35354300F242B4 /* RevealServer.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		0BA1CFE22E2ABCF6003BA9A8 = {
 			isa = PBXGroup;
 			children = (
 				0BA1CFED2E2ABCF6003BA9A8 /* CA */,
+				0B5D40562E35354300F242B4 /* Frameworks */,
 				0BA1CFEC2E2ABCF6003BA9A8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -68,6 +98,8 @@
 				0BA1CFE72E2ABCF6003BA9A8 /* Sources */,
 				0BA1CFE82E2ABCF6003BA9A8 /* Frameworks */,
 				0BA1CFE92E2ABCF6003BA9A8 /* Resources */,
+				0B5D405A2E35354300F242B4 /* Embed Frameworks */,
+				0B5D405B2E35356500F242B4 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -125,6 +157,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0B5D405B2E35356500F242B4 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nexport REVEAL_SERVER_FILENAME=\"RevealServer.xcframework\"\n\n# Update this path to point to the location of RevealServer.xcframework in your project.\nexport REVEAL_SERVER_PATH=\"${SRCROOT}/${REVEAL_SERVER_FILENAME}\"\n\n# If RevealServer.xcframework exists at the specified path, run the integration script.\nif [ -d \"${REVEAL_SERVER_PATH}\" ]; then\n \"${REVEAL_SERVER_PATH}/Scripts/integrate_revealserver.sh\"\nelse\n echo \"Reveal Server not loaded into ${TARGET_NAME}: ${REVEAL_SERVER_FILENAME} could not be found.\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0BA1CFE72E2ABCF6003BA9A8 /* Sources */ = {
