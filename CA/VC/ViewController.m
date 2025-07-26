@@ -8,39 +8,31 @@
 #import "ViewController.h"
 
 @interface ViewController () {
-    CGFloat sw, sh;
+    CGRect screen;
 }
 @end
 
 @implementation ViewController
 
 - (void)render {
-    LAYOUT(HeaderLayout,                    RECT(16, 72, sw - 32, 64));
-        LAYOUT(LeftIconLayout,              RECT(LEADING(HeaderLayout) + 8, CENTER_IN(HeaderLayout, 48), 48, 48));
-        LAYOUT(RightIconLayout,             RECT(TRAILING(HeaderLayout, 48, 8), CENTER_IN(HeaderLayout, 48), 48, 48));
-    
-    LAYOUT(SheetLayout,                     RECT(0, sh - 512, sw, 512));
-        LAYOUT(SelectorLayout,              RECT(LEADING(HeaderLayout), TOP(SheetLayout) + 16, WIDTH(HeaderLayout), 56));
-            LAYOUT(LeftSelectorBtnLayout,   RECT(LEADING(SelectorLayout) + 4, CENTER_IN(SelectorLayout, 48), (WIDTH(SelectorLayout) - 8 - 4) / 2, HEIGHT(SelectorLayout) - 8));
-            LAYOUT(RightSelectorBtnLayout,  RECT(WIDTH(LeftSelectorBtnLayout) + 16 + 4 + 4, CENTER_IN(SelectorLayout, 48), WIDTH(LeftSelectorBtnLayout), HEIGHT(SelectorLayout) - 8));
-        LAYOUT(FirstOptionLayout,           RECT(LEADING(SelectorLayout), BOTTOM(SelectorLayout) + 16, WIDTH(SelectorLayout), 156));
-        LAYOUT(SecondOptionLayout,          RECT(LEADING(SelectorLayout), BOTTOM(FirstOptionLayout) + 8, WIDTH(SelectorLayout), 156));
-        LAYOUT(ContinueBtnLayout,           RECT(LEADING(HeaderLayout), BOTTOM(SecondOptionLayout) + 16, sw - 32, 56));
-    
-    // Top Bar
-    LAYER(Header,                           HeaderLayout,             lightGrayColor,   0.0,  1.0);
-        LAYER(LeftIcon,                     LeftIconLayout,           darkGrayColor,    8.0,  0.8);
-        LAYER(RightIcon,                    RightIconLayout,          darkGrayColor,    8.0,  0.8);
+    CGRect HeaderLayout = R(A(screen) + 16, B(screen) + 72, C(screen) - 32, 64);
+    CGRect IconLayout = R(A(screen) + 16, D(HeaderLayout) + 0, C(screen) - 32, 64);
 
-    // Sheet
-    LAYER(Sheet,                            SheetLayout,              redColor,         16.0, 1.0);
-        LAYER(Selector,                     SelectorLayout,           whiteColor,       12.0, 1.0);
-            LAYER(LeftSelectorBtn,          LeftSelectorBtnLayout,    systemBlueColor,  8.0,  1.0);
-            LAYER(RightSelectorBtn,         RightSelectorBtnLayout,   systemBlueColor,  8.0,  1.0);
-        LAYER(FirstOption,                  FirstOptionLayout,        lightTextColor,   8.0,  0.9);
-        LAYER(SecondOption,                 SecondOptionLayout,       lightTextColor,   8.0,  0.9);
-        LAYER(ContinueBtn,                  ContinueBtnLayout,        greenColor,       10.0, 1.0);
+    LAYER(Header, HeaderLayout,
+          BACKGROUND(COLOR(redColor)),
+          RADIUS(12),
+          OPACITY(0.8),
+          BORDER_WIDTH(4),
+          BORDER_COLOR(COLOR(blueColor)));
+    
+    LAYER(Icon, IconLayout,
+          BACKGROUND(COLOR(redColor)),
+          RADIUS(12),
+          OPACITY(0.8),
+          BORDER_WIDTH(4),
+          BORDER_COLOR(COLOR(blueColor)));
 
+    // TODO: Add TextLayer, ImageLayer, Layout centering, grid, flex
 }
 
 - (void)viewDidLoad {
@@ -50,17 +42,10 @@
 
     srand48(time(NULL));
 
-    sw = [UIScreen mainScreen].bounds.size.width;
-    sh = [UIScreen mainScreen].bounds.size.height;
+    screen = CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width,
+                               [UIScreen mainScreen].bounds.size.height);
 
     [self render];
-}
-
-- (UIColor *)randColor {
-    return [UIColor colorWithHue:drand48()
-                      saturation:1.0
-                      brightness:1.0
-                           alpha:1.0];
 }
 
 @end
