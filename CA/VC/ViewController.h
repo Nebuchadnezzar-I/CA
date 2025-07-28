@@ -7,21 +7,23 @@
 
 #import <UIKit/UIKit.h>
 
-#define A(R)        (R.origin.x)
-#define B(R)        (R.origin.y)
-#define C(R)        (R.origin.x + R.size.width)
-#define D(R)        (R.origin.y + R.size.height)
-#define W(R)        (C(R) - A(R))
-#define H(R)        (D(R) - B(R))
+#define A(R) (R.origin.x)
+#define B(R) (R.origin.y)
+#define C(R) (R.origin.x + R.size.width)
+#define D(R) (R.origin.y + R.size.height)
+#define W(R) (C(R) - A(R))
+#define H(R) (D(R) - B(R))
 
 #define IN(A, B, O) (C(B) - C(A) - W(B) - O)
-#define WB(A, B)    (A(A) - C(A))
-#define CE(R, S)    (B(R) + (H(R) - S) / 2)
+#define WB(A, B) (A(A) - C(A))
+#define CE(R, S) (B(R) + (H(R) - S) / 2)
 
 // Layout
 
 #define COLOR(X) [UIColor X].CGColor
 #define COLOR_NAMED(X) [UIColor colorNamed:X].CGColor
+#define _COLOR(X) [UIColor X]
+#define _COLOR_NAMED(X) [UIColor colorNamed:X]
 #define R(X, Y, W, H) CGRectMake(X, Y, W, H)
 
 #define EXPAND(...) __VA_ARGS__
@@ -57,10 +59,12 @@
     NAME.masksToBounds = YES;                                                  \
     [self.view.layer addSublayer:NAME];
 
-#define TEXT(NAME, RECT, TEXT, FONT)                                           \
+#define TEXT(NAME, RECT, TEXT, FONT, COLOR, ALIGNMENT)                         \
     UILabel *NAME = [[UILabel alloc] initWithFrame:RECT];                      \
     NAME.text = TEXT;                                                          \
     NAME.font = FONT;                                                          \
+    NAME.textColor = COLOR;                                                    \
+    NAME.textAlignment = ALIGNMENT;                                            \
     [self.view addSubview:NAME];
 
 // #define IMAGE(NAME, RECT, ...)
