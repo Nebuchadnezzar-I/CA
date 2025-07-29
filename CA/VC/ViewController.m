@@ -7,110 +7,148 @@
 
 #import "ViewController.h"
 
-typedef struct {
-    UIFont *fontTitleXL;
-    UIFont *fontTitle;
-    UIFont *fontSubtitle;
-    UIFont *fontBody;
-    UIFont *fontBodyBold;
-    UIFont *fontCaption;
-    UIFont *fontButton;
-    UIFont *fontCode;
-    UIFont *fontSmall;
-    UIFont *fontLargeNumber;
-} FontSet;
+//
+// Layout Core
+//
 
-typedef struct {
-    CGFloat fontTitleXL;
-    CGFloat fontTitle;
-    CGFloat fontSubtitle;
-    CGFloat fontBody;
-    CGFloat fontBodyBold;
-    CGFloat fontCaption;
-    CGFloat fontButton;
-    CGFloat fontCode;
-    CGFloat fontSmall;
-    CGFloat fontLargeNumber;
-} FontHeights;
+#define RECT(...) CGRectMake(__VA_ARGS__)
 
-static FontSet F;
-static FontHeights FH;
+#define TA(E) (E.frame.origin.y)
+#define LA(E) (E.frame.origin.x)
+#define RA(E) (E.frame.origin.x + E.frame.size.width)
+#define BA(E) (E.frame.origin.y + E.frame.size.height)
 
-static inline void LoadFonts(void) {
-    F.fontTitleXL     = [UIFont systemFontOfSize:32 weight:UIFontWeightBold];
-    F.fontTitle       = [UIFont systemFontOfSize:24 weight:UIFontWeightSemibold];
-    F.fontSubtitle    = [UIFont systemFontOfSize:20 weight:UIFontWeightRegular];
-    F.fontBody        = [UIFont systemFontOfSize:16 weight:UIFontWeightRegular];
-    F.fontBodyBold    = [UIFont systemFontOfSize:16 weight:UIFontWeightBold];
-    F.fontCaption     = [UIFont systemFontOfSize:14 weight:UIFontWeightRegular];
-    F.fontButton      = [UIFont systemFontOfSize:18 weight:UIFontWeightSemibold];
-    F.fontCode        = [UIFont monospacedSystemFontOfSize:14 weight:UIFontWeightRegular];
-    F.fontSmall       = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
-    F.fontLargeNumber = [UIFont systemFontOfSize:42 weight:UIFontWeightMedium];
+#define L(L) L.frame.origin.x
+#define T(T) T.frame.origin.y
+#define W(W) W.frame.size.width
+#define H(H) H.frame.size.height
 
-    FH.fontTitleXL     = F.fontTitleXL.lineHeight;
-    FH.fontTitle       = F.fontTitle.lineHeight;
-    FH.fontSubtitle    = F.fontSubtitle.lineHeight;
-    FH.fontBody        = F.fontBody.lineHeight;
-    FH.fontBodyBold    = F.fontBodyBold.lineHeight;
-    FH.fontCaption     = F.fontCaption.lineHeight;
-    FH.fontButton      = F.fontButton.lineHeight;
-    FH.fontCode        = F.fontCode.lineHeight;
-    FH.fontSmall       = F.fontSmall.lineHeight;
-    FH.fontLargeNumber = F.fontLargeNumber.lineHeight;
-}
+// Layout Extensions
+
+#define P(E, P) L(E) + P, T(E) + P, W(E) - P * 2, H(E) - P * 2
+#define LEFT_FLEX(E, P) L(E) + P, T(E) + P, (W(E) - P * 2) / 2 - P / 2, H(E) - P * 2
+#define RIGHT_FLEX(E, P) L(E) + W(E) / 2 + P / 2, T(E) + P, (W(E) - P * 2) / 2 - P / 2, H(E) - P * 2
+#define FRAC_FLEX(LEAD, TOP, WID, HEI, PAD, SPT) LEAD, TOP, (W(WID) - PAD * (SPT - 1)) / SPT, HEI)
+
+#define CENTER_IN(ELM, WID, HEI) L(ELM) + ((W(ELM) - WID) / 2), T(ELM) + ((H(ELM) - HEI) / 2), WID, HEI
+#define CENTER_Y(E, S) TA(E) + (H(E) - S) / 2
+#define CENTER_LEFT(ELM, W, H, P) LA(ELM) + P, CENTER_Y(ELM, H), W, H
+#define CENTER_RIGHT(ELM, W, H, P) RA(ELM) - W - P, CENTER_Y(ELM, H), W, H
+#define CENTER_BETWEEN(LEFT, RIGHT, IN, H, P) RA(LEFT) + P, CENTER_Y(IN, H), W_IN(LEFT, right_icon, P), H
+
+#define W_IN(LEFT, RIGHT, P) (LA(RIGHT) - RA(LEFT) - P * 2)
+
+//
+// Layer Core
+//
+
+#define LAYER(RECT, ...)                                                       \
+    ({                                                                         \
+        CALayer *_l = [CALayer new];                                           \
+        _l.frame = RECT;                                                       \
+        __VA_ARGS__;                                                           \
+        [self.view.layer addSublayer:_l];                                      \
+        _l;                                                                    \
+    });
+
+//
+// Modifers
+//
+
+#define COLOR(C) [UIColor C].CGColor
+#define BG(C) _l.backgroundColor = C
+#define RADIUS(R)                                                              \
+    _l.masksToBounds = true;                                                   \
+    _l.cornerRadius = R
+#define BORDER(W, C)                                                           \
+    _l.borderWidth = W;                                                        \
+    _l.borderColor = C
+#define IMG(IMG)                                                               \
+    _l.contents = (__bridge id)[UIImage IMG].CGImage
 
 @interface ViewController () {
-    CGRect screen;
+    CGFloat sw, sh;
 }
 @end
 
 @implementation ViewController
 
 - (void)render {
-    // TODO: Add TextLayer,flex, alignment to bottom
-    CGRect HeaderLayout = R(A(screen) + 16, B(screen) + 72, C(screen) - 32, 64);
-        CGRect HeaderSearchLayout = R(A(HeaderLayout) + 24, CE(HeaderLayout, 20), 20, 20);
-        CGRect HeaderOptionsLayout = R(C(HeaderLayout) - 44, CE(HeaderLayout, 20), 20, 20);
-        CGRect HeaderTextLayer = R(C(HeaderSearchLayout) + 16, CE(HeaderLayout, FH.fontBody), IN(HeaderSearchLayout, HeaderOptionsLayout, 32), FH.fontBody);
-    CGRect AwningLayer = R(A(screen), 360, W(screen), H(screen) - 360);
-        CGRect FilterLayout = R(A(AwningLayer) + 16, B(AwningLayer) + 16, W(AwningLayer) - 32, 56);
-            CGRect OptionOneLayout = R(A(FilterLayout) + 4, B(FilterLayout) + 4, W(FilterLayout) / 2 - 6, 48);
-            CGRect OptionOneTextLayout = R(A(FilterLayout) + 4, CE(FilterLayout, FH.fontBody), W(FilterLayout) / 2 - 6, FH.fontBody);
-            CGRect OptionTwoTextLayout = R(C(OptionOneTextLayout) + 4, CE(FilterLayout, FH.fontBody), W(OptionOneTextLayout), FH.fontBody);
-        CGRect FirstFlightLayout = R(A(AwningLayer) + 16, D(FilterLayout) + 16, W(FilterLayout), 150);
-        CGRect SecondFlightLayout = R(A(FirstFlightLayout), D(FirstFlightLayout) + 8, W(FilterLayout), 150);
+    //
+    CALayer *header =
+    LAYER(RECT(16, 72, sw - 32, 64),
+          BG(COLOR(colorNamed : @"Component")), RADIUS(32));
     
-    CGRect NavSelectorLayout= R(W(screen) / 2 - 56 - 12 - 56 - 24, H(screen) - 112, 56, 56);
-    CGRect NavHomeLayout = R(W(screen) / 2 - 56 - 12 - 56 - 24, H(screen) - 112, 56, 56);
-        CGRect NavHomeIconLayout = R(A(NavHomeLayout) + (W(NavHomeLayout) - 22) / 2, B(NavHomeLayout) + (H(NavHomeLayout) - 24) / 2, 22, 24);
-    CGRect SearchHomeLayout = R(W(screen) / 2 - 56 - 12, H(screen) - 112, 56, 56);
-        CGRect NavSearchIconLayout = R(A(SearchHomeLayout) + (W(SearchHomeLayout) - 20) / 2, B(SearchHomeLayout) + (H(SearchHomeLayout) - 20) / 2, 20, 20);
-    CGRect SaveHomeLayout = R(W(screen) / 2 + 12, H(screen) - 112, 56, 56);
-        CGRect NavSaveIconLayout = R(A(SaveHomeLayout) + (W(SaveHomeLayout) - 16) / 2, B(SaveHomeLayout) + (H(SaveHomeLayout) - 20) / 2, 16, 20);
-    CGRect UserHomeLayout = R(W(screen) / 2 + 12 + 56 + 24, H(screen) - 112, 56, 56);
-        CGRect NavUserIconLayout = R(A(UserHomeLayout) + (W(UserHomeLayout) - 20) / 2, B(UserHomeLayout) + (H(UserHomeLayout) - 23) / 2, 20, 23);
+    LAYER(RECT(CENTER_LEFT(header, 20, 20, 24)),
+          BG(COLOR(redColor)));
+    
+    //
+    CALayer *left_icon =
+    LAYER(RECT(CENTER_LEFT(header, 48, 48, 8)),
+          BG(COLOR(blueColor)), RADIUS(24));
+    
+    LAYER(RECT(CENTER_IN(left_icon, 20, 20)),
+          IMG(imageNamed:@"Search"));
 
+    //
+    CALayer *right_icon =
+    LAYER(RECT(CENTER_RIGHT(header, 48, 48, 8)),
+          BG(COLOR(blueColor)), RADIUS(24));
+    
+    LAYER(RECT(CENTER_IN(right_icon, 22, 18)),
+          IMG(imageNamed:@"Options"));
+ 
+    LAYER(RECT(CENTER_BETWEEN(left_icon, right_icon, header, 20, 4)),
+          BG(COLOR(redColor)))
 
-    LAYER(Header, HeaderLayout, BACKGROUND(COLOR_NAMED(@"Component")), RADIUS(32));
-        IMAGE(HeaderSearch, HeaderSearchLayout, @"Search");
-        TEXT(HeaderText, HeaderTextLayer, @"Search", F.fontBody, _COLOR(lightGrayColor), NSTextAlignmentLeft);
-        IMAGE(HeaderOptions, HeaderOptionsLayout, @"Options");
-    
-    LAYER(Rolette, AwningLayer, BACKGROUND(COLOR_NAMED(@"Component")), RADIUS(48))
-        LAYER(Filter, FilterLayout, BACKGROUND(COLOR_NAMED(@"Secondary")), RADIUS(28))
-            LAYER(OptionOne, OptionOneLayout, BACKGROUND(COLOR(whiteColor)), RADIUS(24));
-            TEXT(OptionOneText, OptionOneTextLayout, @"Trending flights", F.fontBody, _COLOR_NAMED(@"Background"), NSTextAlignmentCenter);
-            TEXT(OptionTwoText, OptionTwoTextLayout, @"Flights near you", F.fontBody, _COLOR(whiteColor), NSTextAlignmentCenter);
-    
-        LAYER(FirstFlight, FirstFlightLayout, BACKGROUND(COLOR_NAMED(@"Secondary")), RADIUS(24));
-        LAYER(SecondFlight, SecondFlightLayout, BACKGROUND(COLOR_NAMED(@"Secondary")), RADIUS(24));
-    
-        LAYER(NavSelector, NavSelectorLayout, BACKGROUND(COLOR(whiteColor)), RADIUS(28));
-        IMAGE(NavHomeIcon, NavHomeIconLayout, @"Home");
-        IMAGE(NavSearchIcon, NavSearchIconLayout, @"Search");
-        IMAGE(NavSaveIcon, NavSaveIconLayout, @"Save");
-        IMAGE(NavUserIcon, NavUserIconLayout, @"User");
+    //    CALayer *redRect =
+    //        LAYER(RECT(16, 72, sw - 32, 64));
+    //
+    //    LAYER(RECT(LEFT_FLEX(redRect, 4)));
+    //
+    //    CALayer *yellowRect =
+    //    [self layerWithFrame:[UIColor yellowColor]
+    //                   frame:CGRectMake(RIGHT_FLEX(redRect, 4))];
+    //
+    //    [self layerWithFrame:[UIColor brownColor]
+    //                   frame:CGRectMake(CENTER_IN(yellowRect, 64, 24)];
+    //
+    //    CALayer *pinkRect =
+    //    [self layerWithFrame:[UIColor systemPinkColor]
+    //                   frame:CGRectMake(LA(redRect), BA(redRect) + 16,
+    //                   W(redRect), 100)];
+    //
+    //    // Flex
+    //    CALayer *flexRect =
+    //    [self layerWithFrame:[UIColor systemPinkColor]
+    //                   frame:CGRectMake(FRAC_FLEX(LA(redRect), BA(pinkRect) +
+    //                   8, redRect, 100, 8, 2)];
+    //
+    //    [self layerWithFrame:[UIColor systemPinkColor]
+    //                   frame:CGRectMake(FRAC_FLEX(RA(flexRect) + 8,
+    //                   BA(pinkRect) + 8, redRect, 100, 8, 2)];
+    //
+    //    // Flex frac
+    //    CALayer *frac1 =
+    //    [self layerWithFrame:[UIColor systemPinkColor]
+    //                   frame:CGRectMake(FRAC_FLEX(LA(redRect), BA(flexRect) +
+    //                   8, redRect, 100, 8, 3)];
+    //
+    //    CALayer *frac2 =
+    //    [self layerWithFrame:[UIColor systemPinkColor]
+    //                   frame:CGRectMake(FRAC_FLEX(RA(frac1) + 8, BA(flexRect)
+    //                   + 8, redRect, 100, 8, 3)];
+    //
+    //    [self layerWithFrame:[UIColor systemPinkColor]
+    //                   frame:CGRectMake(FRAC_FLEX(RA(frac2) + 8, BA(flexRect)
+    //                   + 8, redRect, 100, 8, 3)];
+}
+
+- (CALayer *)newLayer:(CGRect)frame {
+    CALayer *l = [CALayer new];
+    l.frame = frame;
+    [self.view.layer addSublayer:l];
+    return l;
 }
 
 - (void)viewDidLoad {
@@ -118,13 +156,9 @@ static inline void LoadFonts(void) {
 
     self.view.backgroundColor = [UIColor colorNamed:@"Background"];
 
-    srand48(time(NULL));
-    LoadFonts();
+    sw = [UIScreen mainScreen].bounds.size.width;
+    sh = [UIScreen mainScreen].bounds.size.height;
 
-    // Bounds
-    screen = CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width,
-                               [UIScreen mainScreen].bounds.size.height);
-    
     [self render];
 }
 
