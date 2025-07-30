@@ -13,6 +13,7 @@
 
 #define RECT(...) CGRectMake(__VA_ARGS__)
 
+// Layer
 #define TA(E) (E.frame.origin.y)
 #define LA(E) (E.frame.origin.x)
 #define RA(E) (E.frame.origin.x + E.frame.size.width)
@@ -22,6 +23,21 @@
 #define T(T) T.frame.origin.y
 #define W(W) W.frame.size.width
 #define H(H) H.frame.size.height
+
+// Font (Font, Offset)
+#define FH(F, O) (F.pointSize + O)
+
+#define FONT(S, W) ({ [UIFont systemFontOfSize:S weight:W]; })
+
+#define FW_ULTRA_LIGHT  UIFontWeightUltraLight
+#define FW_THIN         UIFontWeightThin
+#define FW_LIGHT        UIFontWeightLight
+#define FW_REGULAR      UIFontWeightRegular
+#define FW_MEDIUM       UIFontWeightMedium
+#define FW_SEMIBOLD     UIFontWeightSemibold
+#define FW_BOLD         UIFontWeightBold
+#define FW_HEAVY        UIFontWeightHeavy
+#define FW_BLACK        UIFontWeightBlack
 
 // Layout Extensions
 
@@ -51,12 +67,34 @@
         _l;                                                                    \
     });
 
+#define TEXT(RECT, ...)                                                        \
+    ({                                                                         \
+        UIFont *_f = FONT(16, FW_LIGHT);                                       \
+        CATextLayer *_l = [CATextLayer new];                                   \
+        _l.frame = RECT;                                                       \
+        _l.contentsScale = [UIScreen mainScreen].scale;                        \
+        _l.string = nil;                                                       \
+        _l.string = @"Remove this text!";                                      \
+        _l.fontSize = _f.pointSize;                                            \
+        __VA_ARGS__;                                                           \
+        (__bridge CFTypeRef) _f;                                               \
+        [self.view.layer addSublayer:_l];                                      \
+    });
+
 //
 // Modifers
 //
 
+#define TSTRING(S)        _l.string = (S)
+#define TFONT(F)          _f = (F)
+#define TFONT_SIZE(S)     _l.fontSize = (S)
+#define TCOLOR(COLOR)     _l.foregroundColor = (COLOR)
+#define TALIGN(ALIGN)     _l.alignmentMode = (ALIGN)
+
 #define COLOR(C) [UIColor C].CGColor
 #define BG(C) _l.backgroundColor = C
+#define OPACITY(O) _l.opacity = O
+
 #define RADIUS(R)                                                              \
     _l.masksToBounds = true;                                                   \
     _l.cornerRadius = R
@@ -69,79 +107,62 @@
 @interface ViewController () {
     CGFloat sw, sh;
 }
+@property (nonatomic, strong) CALayer *leftIconLayer;
+@property (nonatomic, strong) CALayer *leftIcon;
 @end
 
 @implementation ViewController
 
 - (void)render {
-    //
     CALayer *header =
     LAYER(RECT(16, 72, sw - 32, 64),
           BG(COLOR(colorNamed : @"Component")), RADIUS(32));
-    
-    LAYER(RECT(CENTER_LEFT(header, 20, 20, 24)),
-          BG(COLOR(redColor)));
-    
-    //
-    CALayer *left_icon =
-    LAYER(RECT(CENTER_LEFT(header, 48, 48, 8)),
-          BG(COLOR(blueColor)), RADIUS(24));
-    
-    LAYER(RECT(CENTER_IN(left_icon, 20, 20)),
-          IMG(imageNamed:@"Search"));
 
+    
     //
+    self.leftIconLayer =
+    LAYER(RECT(CENTER_LEFT(header, 48, 48, 8)),
+          RADIUS(24));
+    self.leftIcon =
+    LAYER(RECT(CENTER_IN(self.leftIconLayer, 20, 20)),
+          IMG(imageNamed:@"Search"));
+    
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    [self.view addGestureRecognizer:tap];
+    //
+    
     CALayer *right_icon =
     LAYER(RECT(CENTER_RIGHT(header, 48, 48, 8)),
-          BG(COLOR(blueColor)), RADIUS(24));
+          BG(COLOR(colorNamed:@"Secondary")), RADIUS(24));
     
     LAYER(RECT(CENTER_IN(right_icon, 22, 18)),
           IMG(imageNamed:@"Options"));
- 
-    LAYER(RECT(CENTER_BETWEEN(left_icon, right_icon, header, 20, 4)),
-          BG(COLOR(redColor)))
 
-    //    CALayer *redRect =
-    //        LAYER(RECT(16, 72, sw - 32, 64));
-    //
-    //    LAYER(RECT(LEFT_FLEX(redRect, 4)));
-    //
-    //    CALayer *yellowRect =
-    //    [self layerWithFrame:[UIColor yellowColor]
-    //                   frame:CGRectMake(RIGHT_FLEX(redRect, 4))];
-    //
-    //    [self layerWithFrame:[UIColor brownColor]
-    //                   frame:CGRectMake(CENTER_IN(yellowRect, 64, 24)];
-    //
-    //    CALayer *pinkRect =
-    //    [self layerWithFrame:[UIColor systemPinkColor]
-    //                   frame:CGRectMake(LA(redRect), BA(redRect) + 16,
-    //                   W(redRect), 100)];
-    //
-    //    // Flex
-    //    CALayer *flexRect =
-    //    [self layerWithFrame:[UIColor systemPinkColor]
-    //                   frame:CGRectMake(FRAC_FLEX(LA(redRect), BA(pinkRect) +
-    //                   8, redRect, 100, 8, 2)];
-    //
-    //    [self layerWithFrame:[UIColor systemPinkColor]
-    //                   frame:CGRectMake(FRAC_FLEX(RA(flexRect) + 8,
-    //                   BA(pinkRect) + 8, redRect, 100, 8, 2)];
-    //
-    //    // Flex frac
-    //    CALayer *frac1 =
-    //    [self layerWithFrame:[UIColor systemPinkColor]
-    //                   frame:CGRectMake(FRAC_FLEX(LA(redRect), BA(flexRect) +
-    //                   8, redRect, 100, 8, 3)];
-    //
-    //    CALayer *frac2 =
-    //    [self layerWithFrame:[UIColor systemPinkColor]
-    //                   frame:CGRectMake(FRAC_FLEX(RA(frac1) + 8, BA(flexRect)
-    //                   + 8, redRect, 100, 8, 3)];
-    //
-    //    [self layerWithFrame:[UIColor systemPinkColor]
-    //                   frame:CGRectMake(FRAC_FLEX(RA(frac2) + 8, BA(flexRect)
-    //                   + 8, redRect, 100, 8, 3)];
+
+    TEXT(RECT(CENTER_BETWEEN(self.leftIconLayer, right_icon, header, 18, 8)),
+         TFONT_SIZE(16),
+         TCOLOR(COLOR(whiteColor)));
+}
+
+- (void)handleTap:(UITapGestureRecognizer *)recognizer {
+    CGPoint point = [recognizer locationInView:self.view];
+    CALayer *hitLayer = [self.view.layer hitTest:point];
+
+    if (hitLayer == self.leftIcon || hitLayer == self.leftIconLayer) {
+        NSLog(@"Tapped myLayer!");
+        
+        [CATransaction begin];
+        [CATransaction setAnimationDuration:0.1];
+        self.leftIconLayer.backgroundColor = COLOR(colorNamed:@"Secondary");
+        [CATransaction commit];
+        
+        return;
+    }
+    
+    [CATransaction begin];
+    [CATransaction setAnimationDuration:0.2];
+    self.leftIconLayer.backgroundColor = COLOR(clearColor);
+    [CATransaction commit];
 }
 
 - (CALayer *)newLayer:(CGRect)frame {
@@ -153,12 +174,12 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
+    
     self.view.backgroundColor = [UIColor colorNamed:@"Background"];
-
+    
     sw = [UIScreen mainScreen].bounds.size.width;
     sh = [UIScreen mainScreen].bounds.size.height;
-
+    
     [self render];
 }
 
