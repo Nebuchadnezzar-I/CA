@@ -104,73 +104,97 @@
 #define IMG(IMG)                                                               \
     _l.contents = (__bridge id)[UIImage IMG].CGImage
 
-@interface ViewController () {
-    CGFloat sw, sh;
-}
-@property (nonatomic, strong) CALayer *leftIconLayer;
-@property (nonatomic, strong) CALayer *leftIcon;
+@interface ViewController () { CGFloat sw, sh; }
+@property (nonatomic) BOOL didTriggerLongPress;
+@property (nonatomic, strong) CALayer *header;
 @end
 
 @implementation ViewController
 
 - (void)render {
-    CALayer *header =
-    LAYER(RECT(16, 72, sw - 32, 64),
-          BG(COLOR(colorNamed : @"Component")), RADIUS(32));
+    self.header = LAYER(RECT(16, 72, sw - 32, 64),
+                        BG(COLOR(colorNamed : @"Component")),
+                        RADIUS(32));
+    
+    // Long Press
+    UILongPressGestureRecognizer *pressGestureRecognizer =
+        [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(pressHandler:)];
+    pressGestureRecognizer.minimumPressDuration = 1.0;
+    [self.view addGestureRecognizer:pressGestureRecognizer];
 
-    
-    //
-    self.leftIconLayer =
-    LAYER(RECT(CENTER_LEFT(header, 48, 48, 8)),
-          RADIUS(24));
-    self.leftIcon =
-    LAYER(RECT(CENTER_IN(self.leftIconLayer, 20, 20)),
-          IMG(imageNamed:@"Search"));
-    
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-    [self.view addGestureRecognizer:tap];
-    //
-    
-    CALayer *right_icon =
-    LAYER(RECT(CENTER_RIGHT(header, 48, 48, 8)),
-          BG(COLOR(colorNamed:@"Secondary")), RADIUS(24));
-    
-    LAYER(RECT(CENTER_IN(right_icon, 22, 18)),
-          IMG(imageNamed:@"Options"));
+    // Tap
+    UITapGestureRecognizer *tapGestureRecognizer =
+        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapHandler:)];
+    [tapGestureRecognizer requireGestureRecognizerToFail:pressGestureRecognizer]; // prevent conflict
+    [self.view addGestureRecognizer:tapGestureRecognizer];
 
+    // Double Tap
+    UITapGestureRecognizer *doubleTapGestureRecognizer =
+        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(doubleTapHandler:)];
+    doubleTapGestureRecognizer.numberOfTapsRequired = 2;
+    [tapGestureRecognizer requireGestureRecognizerToFail:doubleTapGestureRecognizer];
+    [self.view addGestureRecognizer:doubleTapGestureRecognizer];
 
-    TEXT(RECT(CENTER_BETWEEN(self.leftIconLayer, right_icon, header, 18, 8)),
-         TFONT_SIZE(16),
-         TCOLOR(COLOR(whiteColor)));
+    [tapGestureRecognizer requireGestureRecognizerToFail:doubleTapGestureRecognizer];
+    [tapGestureRecognizer requireGestureRecognizerToFail:pressGestureRecognizer];
+    
+    // Pan (drag)
+    UIPanGestureRecognizer *panGestureRecognizer =
+        [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panHandler:)];
+    [self.view addGestureRecognizer:panGestureRecognizer];
+
+    // Swipe (can specify direction)
+    UISwipeGestureRecognizer *swipeGestureRecognizer =
+        [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeHandler:)];
+    swipeGestureRecognizer.direction = UISwipeGestureRecognizerDirectionRight;
+    [self.view addGestureRecognizer:swipeGestureRecognizer];
+    
+    [panGestureRecognizer requireGestureRecognizerToFail:swipeGestureRecognizer];
+
+    // Pinch (zoom)
+    UIPinchGestureRecognizer *pinchGestureRecognizer =
+        [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(pinchHandler:)];
+    [self.view addGestureRecognizer:pinchGestureRecognizer];
+
+    // Rotation
+    UIRotationGestureRecognizer *rotationGestureRecognizer =
+        [[UIRotationGestureRecognizer alloc] initWithTarget:self action:@selector(rotationHandler:)];
+    [self.view addGestureRecognizer:rotationGestureRecognizer];
+    
+    [pinchGestureRecognizer requireGestureRecognizerToFail:swipeGestureRecognizer];
 }
 
-- (void)handleTap:(UITapGestureRecognizer *)recognizer {
-    CGPoint point = [recognizer locationInView:self.view];
-    CALayer *hitLayer = [self.view.layer hitTest:point];
+- (void)tapHandler:(UITapGestureRecognizer *)recognizer {
+    NSLog(@"Tap recognized");
+}
 
-    if (hitLayer == self.leftIcon || hitLayer == self.leftIconLayer) {
-        NSLog(@"Tapped myLayer!");
-        
-        [CATransaction begin];
-        [CATransaction setAnimationDuration:0.1];
-        self.leftIconLayer.backgroundColor = COLOR(colorNamed:@"Secondary");
-        [CATransaction commit];
-        
-        return;
+- (void)doubleTapHandler:(UITapGestureRecognizer *)recognizer {
+    NSLog(@"Double Tap recognized");
+}
+
+- (void)pressHandler:(UILongPressGestureRecognizer *)recognizer {
+    if (recognizer.state == UIGestureRecognizerStateBegan) {
+        NSLog(@"Long Press began");
     }
-    
-    [CATransaction begin];
-    [CATransaction setAnimationDuration:0.2];
-    self.leftIconLayer.backgroundColor = COLOR(clearColor);
-    [CATransaction commit];
 }
 
-- (CALayer *)newLayer:(CGRect)frame {
-    CALayer *l = [CALayer new];
-    l.frame = frame;
-    [self.view.layer addSublayer:l];
-    return l;
+- (void)panHandler:(UIPanGestureRecognizer *)recognizer {
+    CGPoint translation = [recognizer translationInView:self.view];
+    NSLog(@"Pan translation: %@", NSStringFromCGPoint(translation));
 }
+
+- (void)swipeHandler:(UISwipeGestureRecognizer *)recognizer {
+    NSLog(@"Swipe recognized");
+}
+
+- (void)pinchHandler:(UIPinchGestureRecognizer *)recognizer {
+    NSLog(@"Pinch scale: %f", recognizer.scale);
+}
+
+- (void)rotationHandler:(UIRotationGestureRecognizer *)recognizer {
+    NSLog(@"Rotation: %f", recognizer.rotation);
+}
+
 
 - (void)viewDidLoad {
     [super viewDidLoad];
