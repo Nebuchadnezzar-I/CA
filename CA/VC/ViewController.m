@@ -8,6 +8,90 @@
 #import "ViewController.h"
 
 //
+// Recognizers
+//
+
+#define SWIPE_DIR_RIGHT UISwipeGestureRecognizerDirectionRight
+#define SWIPE_DIR_LEFT  UISwipeGestureRecognizerDirectionLeft
+#define SWIPE_DIR_UP    UISwipeGestureRecognizerDirectionUp
+#define SWIPE_DIR_DOWN  UISwipeGestureRecognizerDirectionDown
+
+#define RECOGNIZER(LONG_PRESS_DURATION, TAPS_REQUIRED)                         \
+    /* Long Press */                                                           \
+    UILongPressGestureRecognizer *pressGestureRecognizer =                     \
+        [[UILongPressGestureRecognizer alloc]                                  \
+            initWithTarget:self action:@selector(pressHandler:)];              \
+    pressGestureRecognizer.minimumPressDuration = LONG_PRESS_DURATION;         \
+    [self.view addGestureRecognizer:pressGestureRecognizer];                   \
+                                                                               \
+    /* Tap */                                                                  \
+    UITapGestureRecognizer *tapGestureRecognizer =                             \
+        [[UITapGestureRecognizer alloc]                                        \
+            initWithTarget:self action:@selector(tapHandler:)];                \
+    [tapGestureRecognizer requireGestureRecognizerToFail:pressGestureRecognizer]; \
+    [self.view addGestureRecognizer:tapGestureRecognizer];                     \
+                                                                               \
+    /* Double Tap */                                                           \
+    UITapGestureRecognizer *doubleTapGestureRecognizer =                       \
+        [[UITapGestureRecognizer alloc]                                        \
+            initWithTarget:self action:@selector(doubleTapHandler:)];          \
+    doubleTapGestureRecognizer.numberOfTapsRequired = TAPS_REQUIRED;           \
+    [tapGestureRecognizer requireGestureRecognizerToFail:doubleTapGestureRecognizer]; \
+    [self.view addGestureRecognizer:doubleTapGestureRecognizer];               \
+                                                                               \
+    /* Pan */                                                                  \
+    UIPanGestureRecognizer *panGestureRecognizer =                             \
+        [[UIPanGestureRecognizer alloc]                                        \
+            initWithTarget:self action:@selector(panHandler:)];                \
+    [self.view addGestureRecognizer:panGestureRecognizer];                     \
+                                                                               \
+    /* Swipe Right */                                                          \
+    UISwipeGestureRecognizer *swipeRight =                                     \
+        [[UISwipeGestureRecognizer alloc]                                      \
+            initWithTarget:self action:@selector(swipeHandler:)];              \
+    swipeRight.direction = UISwipeGestureRecognizerDirectionRight;             \
+    [self.view addGestureRecognizer:swipeRight];                               \
+    [panGestureRecognizer requireGestureRecognizerToFail:swipeRight];          \
+                                                                               \
+    /* Swipe Left */                                                           \
+    UISwipeGestureRecognizer *swipeLeft =                                      \
+        [[UISwipeGestureRecognizer alloc]                                      \
+            initWithTarget:self action:@selector(swipeHandler:)];              \
+    swipeLeft.direction = UISwipeGestureRecognizerDirectionLeft;               \
+    [self.view addGestureRecognizer:swipeLeft];                                \
+    [panGestureRecognizer requireGestureRecognizerToFail:swipeLeft];           \
+                                                                               \
+    /* Swipe Up */                                                             \
+    UISwipeGestureRecognizer *swipeUp =                                        \
+        [[UISwipeGestureRecognizer alloc]                                      \
+            initWithTarget:self action:@selector(swipeHandler:)];              \
+    swipeUp.direction = UISwipeGestureRecognizerDirectionUp;                   \
+    [self.view addGestureRecognizer:swipeUp];                                  \
+    [panGestureRecognizer requireGestureRecognizerToFail:swipeUp];             \
+                                                                               \
+    /* Swipe Down */                                                           \
+    UISwipeGestureRecognizer *swipeDown =                                      \
+        [[UISwipeGestureRecognizer alloc]                                      \
+            initWithTarget:self action:@selector(swipeHandler:)];              \
+    swipeDown.direction = UISwipeGestureRecognizerDirectionDown;               \
+    [self.view addGestureRecognizer:swipeDown];                                \
+    [panGestureRecognizer requireGestureRecognizerToFail:swipeDown];           \
+                                                                               \
+    /* Pinch */                                                                \
+    UIPinchGestureRecognizer *pinchGestureRecognizer =                         \
+        [[UIPinchGestureRecognizer alloc]                                      \
+            initWithTarget:self action:@selector(pinchHandler:)];              \
+    [self.view addGestureRecognizer:pinchGestureRecognizer];                   \
+                                                                               \
+    /* Rotation */                                                             \
+    UIRotationGestureRecognizer *rotationGestureRecognizer =                   \
+        [[UIRotationGestureRecognizer alloc]                                   \
+            initWithTarget:self action:@selector(rotationHandler:)];           \
+    [self.view addGestureRecognizer:rotationGestureRecognizer];                \
+                                                                               \
+    [pinchGestureRecognizer requireGestureRecognizerToFail:panGestureRecognizer];
+
+//
 // Layout Core
 //
 
@@ -116,52 +200,7 @@
                         BG(COLOR(colorNamed : @"Component")),
                         RADIUS(32));
     
-    // Long Press
-    UILongPressGestureRecognizer *pressGestureRecognizer =
-        [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(pressHandler:)];
-    pressGestureRecognizer.minimumPressDuration = 1.0;
-    [self.view addGestureRecognizer:pressGestureRecognizer];
-
-    // Tap
-    UITapGestureRecognizer *tapGestureRecognizer =
-        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapHandler:)];
-    [tapGestureRecognizer requireGestureRecognizerToFail:pressGestureRecognizer]; // prevent conflict
-    [self.view addGestureRecognizer:tapGestureRecognizer];
-
-    // Double Tap
-    UITapGestureRecognizer *doubleTapGestureRecognizer =
-        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(doubleTapHandler:)];
-    doubleTapGestureRecognizer.numberOfTapsRequired = 2;
-    [tapGestureRecognizer requireGestureRecognizerToFail:doubleTapGestureRecognizer];
-    [self.view addGestureRecognizer:doubleTapGestureRecognizer];
-
-    [tapGestureRecognizer requireGestureRecognizerToFail:doubleTapGestureRecognizer];
-    [tapGestureRecognizer requireGestureRecognizerToFail:pressGestureRecognizer];
-    
-    // Pan (drag)
-    UIPanGestureRecognizer *panGestureRecognizer =
-        [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panHandler:)];
-    [self.view addGestureRecognizer:panGestureRecognizer];
-
-    // Swipe (can specify direction)
-    UISwipeGestureRecognizer *swipeGestureRecognizer =
-        [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeHandler:)];
-    swipeGestureRecognizer.direction = UISwipeGestureRecognizerDirectionRight;
-    [self.view addGestureRecognizer:swipeGestureRecognizer];
-    
-    [panGestureRecognizer requireGestureRecognizerToFail:swipeGestureRecognizer];
-
-    // Pinch (zoom)
-    UIPinchGestureRecognizer *pinchGestureRecognizer =
-        [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(pinchHandler:)];
-    [self.view addGestureRecognizer:pinchGestureRecognizer];
-
-    // Rotation
-    UIRotationGestureRecognizer *rotationGestureRecognizer =
-        [[UIRotationGestureRecognizer alloc] initWithTarget:self action:@selector(rotationHandler:)];
-    [self.view addGestureRecognizer:rotationGestureRecognizer];
-    
-    [pinchGestureRecognizer requireGestureRecognizerToFail:swipeGestureRecognizer];
+    RECOGNIZER(3.0, 2);
 }
 
 - (void)tapHandler:(UITapGestureRecognizer *)recognizer {
@@ -184,7 +223,25 @@
 }
 
 - (void)swipeHandler:(UISwipeGestureRecognizer *)recognizer {
-    NSLog(@"Swipe recognized");
+    UISwipeGestureRecognizerDirection direction = recognizer.direction;
+
+    switch (direction) {
+        case UISwipeGestureRecognizerDirectionRight:
+            NSLog(@"Swipe Right");
+            break;
+        case UISwipeGestureRecognizerDirectionLeft:
+            NSLog(@"Swipe Left");
+            break;
+        case UISwipeGestureRecognizerDirectionUp:
+            NSLog(@"Swipe Up");
+            break;
+        case UISwipeGestureRecognizerDirectionDown:
+            NSLog(@"Swipe Down");
+            break;
+        default:
+            NSLog(@"Unknown Swipe Direction");
+            break;
+    }
 }
 
 - (void)pinchHandler:(UIPinchGestureRecognizer *)recognizer {
