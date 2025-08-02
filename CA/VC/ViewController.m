@@ -110,7 +110,6 @@
 
 // Font (Font, Offset)
 #define FH(F, O) (F.pointSize + O)
-
 #define FONT(S, W) ({ [UIFont systemFontOfSize:S weight:W]; })
 
 #define FW_ULTRA_LIGHT  UIFontWeightUltraLight
@@ -142,17 +141,20 @@
 // Layer Core
 //
 
-#define LAYER(RECT, ...)                                                       \
-    ({                                                                         \
+#define BASE()                                                                 \
+    CALayer *base = [CALayer new];                                             \
+    base.frame = RECT(0, 0, sw, sh);
+
+#define LAYER(NAME, RECT, ...)                                                 \
+    do {                                                                       \
         CALayer *_l = [CALayer new];                                           \
         _l.frame = RECT;                                                       \
         __VA_ARGS__;                                                           \
-        [self.view.layer addSublayer:_l];                                      \
-        _l;                                                                    \
-    });
+        reg_layers[NAME] = _l;                                                 \
+    } while (0)
 
-#define TEXT(RECT, ...)                                                        \
-    ({                                                                         \
+#define TEXT(NAME, RECT, ...)                                                  \
+    do {                                                                       \
         UIFont *_f = FONT(16, FW_LIGHT);                                       \
         CATextLayer *_l = [CATextLayer new];                                   \
         _l.frame = RECT;                                                       \
@@ -162,8 +164,8 @@
         _l.fontSize = _f.pointSize;                                            \
         __VA_ARGS__;                                                           \
         (__bridge CFTypeRef) _f;                                               \
-        [self.view.layer addSublayer:_l];                                      \
-    });
+        reg_layers[NAME] = _l;                                                 \
+    } while (0)
 
 //
 // Modifers
@@ -188,70 +190,130 @@
 #define IMG(IMG)                                                               \
     _l.contents = (__bridge id)[UIImage IMG].CGImage
 
-@interface ViewController () { CGFloat sw, sh; }
-@property (nonatomic) BOOL didTriggerLongPress;
-@property (nonatomic, strong) CALayer *header;
+typedef enum GestureType {
+    TAP, DOUBLE_TAP, PRESS, PAN, PINCH, ROTATION,
+    SWIPE_LEADING, SWIPE_TRAILING, SWIPE_TOP, SWIPE_BOTTOM
+} GestureType;
+
+typedef void (^AnimationBlock)(UIGestureRecognizer *inputValue);
+
+typedef struct {
+    AnimationBlock block;
+    GestureType gesture;
+    CALayer *layer;
+} AnimationProps;
+
+@interface ViewController () {
+    CGFloat sw, sh;
+    
+    NSMutableDictionary *reg_animations;
+    NSMutableDictionary *reg_layers;
+}
 @end
 
 @implementation ViewController
 
-- (void)render {
-    self.header = LAYER(RECT(16, 72, sw - 32, 64),
-                        BG(COLOR(colorNamed : @"Component")),
-                        RADIUS(32));
+- (void)ui {
+    BASE();
     
+    LAYER(@"Header", RECT(16, 72, sw - 32, 64),
+          BG(COLOR(colorNamed : @"Component")),
+          RADIUS(8));
+    
+    TEXT(@"Action", RECT(CENTER_IN(base, 300, FH(FONT(16, FW_LIGHT), 4))),
+         TALIGN(kCAAlignmentCenter));
+    
+    AnimationProps *props = malloc(sizeof(AnimationProps));
+    props->gesture = PRESS;
+    props->layer = reg_layers[@"Header"];
+    props->block = ^(id inputValue) {
+        CALayer *_l = self->reg_layers[@"Header"];
+
+        CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:@"backgroundColor"];
+        anim.fromValue = (__bridge id)COLOR(colorNamed: @"Component");
+        anim.toValue   = (__bridge id)[UIColor blueColor].CGColor;
+
+        [CATransaction begin];
+        [CATransaction setAnimationDuration:0.5];
+
+        [_l addAnimation:anim forKey:nil];
+        _l.backgroundColor = [UIColor blueColor].CGColor;
+
+        [CATransaction commit];
+    };
+    reg_animations[@"HeaderAnimation"] = [NSValue valueWithPointer:props];
+
     RECOGNIZER(3.0, 2);
 }
 
 - (void)tapHandler:(UITapGestureRecognizer *)recognizer {
-    NSLog(@"Tap recognized");
+    CGPoint location = [recognizer locationInView:self.view];
+    
+    for (NSValue *val in [reg_animations allValues]) {
+        AnimationProps *props = [val pointerValue];
+        if (CGRectContainsPoint(props->layer.frame, location)
+            && props->gesture == TAP
+        ) { props->block(nil); }
+    }
 }
 
 - (void)doubleTapHandler:(UITapGestureRecognizer *)recognizer {
-    NSLog(@"Double Tap recognized");
+    CGPoint location = [recognizer locationInView:self.view];
+    
+    for (NSValue *val in [reg_animations allValues]) {
+        AnimationProps *props = [val pointerValue];
+        if (CGRectContainsPoint(props->layer.frame, location)
+            && props->gesture == DOUBLE_TAP
+        ) { props->block(nil); }
+    }
 }
 
 - (void)pressHandler:(UILongPressGestureRecognizer *)recognizer {
-    if (recognizer.state == UIGestureRecognizerStateBegan) {
-        NSLog(@"Long Press began");
+    CGPoint location = [recognizer locationInView:self.view];
+    
+    for (NSValue *val in [reg_animations allValues]) {
+        AnimationProps *props = [val pointerValue];
+        if (CGRectContainsPoint(props->layer.frame, location)
+            && props->gesture == PRESS &&
+            recognizer.state == UIGestureRecognizerStateBegan
+        ) { props->block(nil); }
     }
 }
 
 - (void)panHandler:(UIPanGestureRecognizer *)recognizer {
     CGPoint translation = [recognizer translationInView:self.view];
-    NSLog(@"Pan translation: %@", NSStringFromCGPoint(translation));
+    ((CATextLayer *)reg_layers[@"Action"]).string =
+        (__bridge NSString *)CFStringCreateWithFormat(NULL, NULL, CFSTR("Pan: {%.1f, %.1f}"), translation.x, translation.y);
 }
 
 - (void)swipeHandler:(UISwipeGestureRecognizer *)recognizer {
-    UISwipeGestureRecognizerDirection direction = recognizer.direction;
-
-    switch (direction) {
-        case UISwipeGestureRecognizerDirectionRight:
-            NSLog(@"Swipe Right");
-            break;
-        case UISwipeGestureRecognizerDirectionLeft:
-            NSLog(@"Swipe Left");
-            break;
-        case UISwipeGestureRecognizerDirectionUp:
-            NSLog(@"Swipe Up");
-            break;
-        case UISwipeGestureRecognizerDirectionDown:
-            NSLog(@"Swipe Down");
-            break;
-        default:
-            NSLog(@"Unknown Swipe Direction");
-            break;
+    NSString *msg = @"Unknown Swipe";
+    switch (recognizer.direction) {
+        case UISwipeGestureRecognizerDirectionRight: msg = @"Swipe Right"; break;
+        case UISwipeGestureRecognizerDirectionLeft:  msg = @"Swipe Left";  break;
+        case UISwipeGestureRecognizerDirectionUp:    msg = @"Swipe Up";    break;
+        case UISwipeGestureRecognizerDirectionDown:  msg = @"Swipe Down";  break;
     }
+    ((CATextLayer *)reg_layers[@"Action"]).string = msg;
 }
 
 - (void)pinchHandler:(UIPinchGestureRecognizer *)recognizer {
-    NSLog(@"Pinch scale: %f", recognizer.scale);
+    NSString *msg = [NSString stringWithFormat:@"Pinch scale: %.2f", recognizer.scale];
+    ((CATextLayer *)reg_layers[@"Action"]).string = msg;
 }
 
 - (void)rotationHandler:(UIRotationGestureRecognizer *)recognizer {
-    NSLog(@"Rotation: %f", recognizer.rotation);
+    NSString *msg = [NSString stringWithFormat:@"Rotation: %.2f", recognizer.rotation];
+    ((CATextLayer *)reg_layers[@"Action"]).string = msg;
 }
 
+//
+
+- (void)mount {
+    for (CALayer *layer in [reg_layers allValues]) {
+        [self.view.layer addSublayer:layer];
+    }
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -261,7 +323,11 @@
     sw = [UIScreen mainScreen].bounds.size.width;
     sh = [UIScreen mainScreen].bounds.size.height;
     
-    [self render];
+    reg_layers = [[NSMutableDictionary alloc] initWithCapacity:4];
+    reg_animations = [[NSMutableDictionary alloc] initWithCapacity:4];
+    
+    [self ui];
+    [self mount];
 }
 
 @end
