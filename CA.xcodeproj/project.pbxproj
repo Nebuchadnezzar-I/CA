@@ -40,11 +40,22 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		0B4C99B62E3F6B190007D185 /* Exceptions for "CA" folder in "Copy Bundle Resources" phase from "CA" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 0BA1CFE92E2ABCF6003BA9A8 /* Resources */;
+			membershipExceptions = (
+				Elements/Elements.h,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0BA1CFED2E2ABCF6003BA9A8 /* CA */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				0BA1D0022E2ABCF7003BA9A8 /* Exceptions for "CA" folder in "CA" target */,
+				0B4C99B62E3F6B190007D185 /* Exceptions for "CA" folder in "Copy Bundle Resources" phase from "CA" target */,
 			);
 			path = CA;
 			sourceTree = "<group>";
