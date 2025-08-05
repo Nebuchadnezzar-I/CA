@@ -7,105 +7,83 @@
 
 #import "ViewController.h"
 
-@interface ViewController () {
-    CGFloat SW, SH;
+typedef enum { HEADER, SOME_TEXT } Layers;
 
-    CALayer *header,
-            *under1, *under2;
-    UIScrollView *scroll;
+@interface ViewController () {
+    NSMutableDictionary *layers;
+    CGFloat SW, SH;
 }
 @end
 
-#define BY(E) E.frame.size.height + E.frame.origin.y
-#define BX(E) E.frame.size.width + E.frame.origin.x
+#define LAYER(NAME, RECT, ...)                                                 \
+    do {                                                                       \
+        CALayer *_l = [CALayer new];                                           \
+        _l.frame = RECT;                                                       \
+        __VA_ARGS__;                                                           \
+        layers[@(NAME)] = _l;                                                  \
+    } while (0)
 
-#define TY(E) E.frame.origin.y
-#define TX(E) E.frame.origin.x
+#define TEXT(NAME, RECT, ...)                                                  \
+    do {                                                                       \
+        CATextLayer *_l = [CATextLayer new];                                   \
+        _l.frame = RECT;                                                       \
+        _l.contentsScale = UIScreen.mainScreen.scale;                          \
+        __VA_ARGS__;                                                           \
+        layers[@(NAME)] = _l;                                                  \
+    } while (0)
 
-#define WIDTH(E)  E.bounds.size.width
-#define HEIGHT(E) E.bounds.size.height
+#define SCROLL()
+
+// Modifiers
+#define CG_COLOR(VAL) [UIColor VAL].CGColor
+
+#define FW_ULTRALIGHT UIFontWeightUltraLight
+#define FW_THIN UIFontWeightThin
+#define FW_LIGHT UIFontWeightLight
+#define FW_REGULAR UIFontWeightRegular
+#define FW_MEDIUM UIFontWeightMedium
+#define FW_SEMIBOLD UIFontWeightSemibold
+#define FW_BOLD UIFontWeightBold
+#define FW_HEAVY UIFontWeightHeavy
+#define FW_BLACK UIFontWeightBlack
+
+#define ALIGN_LEFT kCAAlignmentLeft
+
+//
+
+#define RADIUS(VAL) _l.cornerRadius = VAL
+#define BACKGROUND(VAL) _l.backgroundColor = VAL
+#define STRING(VAL) _l.string = VAL
+#define ALIGNMENT(VAL) _l.alignmentMode = VAL
+#define FONT(SIZE, WEIGHT) \
+    (_l.font = CGFontCreateWithFontName((CFStringRef)[UIFont systemFontOfSize:SIZE weight:WEIGHT].fontName), \
+     _l.fontSize = SIZE)
 
 @implementation ViewController
 
 - (void)ui {
-    header = [self
-        createLayer:[self TX:16 TY:72 BX:SW - 16 BY:136]
-        background:[UIColor redColor]];
-    
-    scroll = [self
-        createScroll:[self TX:TX(header) TY:BY(header) + 16 BX:BX(header) BY:SH - 72]
-        diration:S_VERTICAL];
-    
-    under1 = [self
-        createLayer:[self X:0 Y:16 W:WIDTH(scroll) H:64]
-        background:[UIColor blueColor]];
-    
-    under2 = [self
-        createLayer:[self X:0 Y:BY(under1) + 16 W:WIDTH(scroll) H:64]
-        background:[UIColor blueColor]];
+    LAYER(HEADER, [Elements TX:16 TY:72 BX:SW - 16 BY:136], RADIUS(32),
+          BACKGROUND(CG_COLOR(blueColor)));
+
+    TEXT(SOME_TEXT, [Elements X:16 Y:136 W:SW - 32 H:24],
+         STRING(@"Hello World!"), FONT(20, FW_REGULAR), ALIGNMENT(ALIGN_LEFT));
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     self.view.backgroundColor = [UIColor colorNamed:@"Background"];
+    layers = [[NSMutableDictionary alloc] initWithCapacity:8];
     SW = [UIScreen mainScreen].bounds.size.width;
     SH = [UIScreen mainScreen].bounds.size.height;
-    
-    UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
-    [appearance configureWithOpaqueBackground];
-    appearance.backgroundColor = [UIColor clearColor];
-    appearance.shadowColor = nil;
-    self.navigationController.navigationBar.standardAppearance = appearance;
-    self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+
+    HIDE_HEADER();
 
     [self ui];
-    [self.view.layer addSublayer:header];
-    [self.view addSubview:scroll];
-        [scroll.layer addSublayer:under1];
-        [scroll.layer addSublayer:under2];
-}
 
-//
-
-typedef enum { S_VERTICAL, S_HORIZONTAL } ScrollDirction;
-- (UIScrollView *)createScroll:(CGRect)frame diration:(ScrollDirction)dir {
-    UIScrollView *_s = [[UIScrollView alloc] initWithFrame:frame];
-    _s.bounces = YES;
-    _s.decelerationRate = UIScrollViewDecelerationRateNormal;
-    _s.scrollEnabled = YES;
-    _s.clipsToBounds = YES;
-    _s.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-
-    if (dir == S_VERTICAL) {
-        _s.contentSize = CGSizeMake(CGRectGetWidth(frame), 2000);
-        _s.alwaysBounceVertical = YES;
-        _s.showsVerticalScrollIndicator = YES;
-        _s.showsHorizontalScrollIndicator = NO;
-    } else {
-        _s.contentSize = CGSizeMake(2000, CGRectGetHeight(frame));
-        _s.alwaysBounceHorizontal = YES;
-        _s.showsHorizontalScrollIndicator = YES;
-        _s.showsVerticalScrollIndicator = NO;
+    for (CALayer *_l in [layers allValues]) {
+        [self.view.layer addSublayer:_l];
     }
-
-    return _s;
-}
-
-- (CALayer *)createLayer:(CGRect)frame background:(UIColor *)background {
-    CALayer *_l = [CALayer new];
-    _l.frame = frame;
-    _l.backgroundColor = background.CGColor;
-    return _l;
-}
-
-- (CGRect)X:(CGFloat)x Y:(CGFloat)y W:(CGFloat)w H:(CGFloat)h {
-    return CGRectMake(x, y, w, h);
-}
-
-- (CGRect)TX:(CGFloat)tx TY:(CGFloat)ty BX:(CGFloat)bx BY:(CGFloat)by {
-    CGRect _r = CGRectMake(tx, ty, bx - tx, by - ty);
-    return _r;
 }
 
 @end
