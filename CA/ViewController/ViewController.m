@@ -8,75 +8,104 @@
 #import "ViewController.h"
 
 @interface ViewController () {
-    CGFloat sw, sh;
+    CGFloat SW, SH;
 
-    CALayer *header, *searchIcon, *settingsIcon, *searchText;
+    CALayer *header,
+            *under1, *under2;
+    UIScrollView *scroll;
 }
 @end
+
+#define BY(E) E.frame.size.height + E.frame.origin.y
+#define BX(E) E.frame.size.width + E.frame.origin.x
+
+#define TY(E) E.frame.origin.y
+#define TX(E) E.frame.origin.x
+
+#define WIDTH(E)  E.bounds.size.width
+#define HEIGHT(E) E.bounds.size.height
 
 @implementation ViewController
 
 - (void)ui {
-    header = LAYER(RECT(24, 72, sw - 48, 64),
-                   BG(COLOR(colorNamed : @"Component")), RADIUS(32));
+    header = [self
+        createLayer:[self TX:16 TY:72 BX:SW - 16 BY:136]
+        background:[UIColor redColor]];
     
-    searchIcon = LAYER(RECT(L(header) + 24, CENTER_Y(header, 20), 20, 20),
-                       IMG(imageNamed:@"Search"));
+    scroll = [self
+        createScroll:[self TX:TX(header) TY:BY(header) + 16 BX:BX(header) BY:SH - 72]
+        diration:S_VERTICAL];
     
-    settingsIcon = LAYER(RECT(RA(header) - 22 - 24, CENTER_Y(header, 18), 22, 18),
-                       IMG(imageNamed:@"Options"));
+    under1 = [self
+        createLayer:[self X:0 Y:16 W:WIDTH(scroll) H:64]
+        background:[UIColor blueColor]];
     
-    searchText = TEXT(RECT(CENTER_BETWEEN(searchIcon, settingsIcon, header, 20, 16)));
-    
-    
-    [self.view.layer addSublayer:header];
-    [self.view.layer addSublayer:searchIcon];
-    [self.view.layer addSublayer:settingsIcon];
-    [self.view.layer addSublayer:searchText];
-
-    RECOGNIZERS(2.0, 2);
-}
-
-RECOGNIZER
-
-- (void)perform:(GesturePayload)payload {
-    [CATransaction begin];
-    [CATransaction setAnimationDuration:0.30];
-    
-    switch (payload.cmd) {
-        case G_TAP:
-            if (![header hitTest:payload.swipe.location]) break;
-            //
-            header.frame = CGRectMake(0, 0, sw, sh);
-            header.cornerRadius = 0;
-            //
-            searchIcon.frame = RECT(L(header) + 24, 72 + 22, 20, 20);
-            settingsIcon.frame = RECT(RA(header) - 24 - 22, 72 + 22, 22, 18);
-            searchText.frame = RECT(RA(searchIcon) + 16, T(searchText), W(searchText), H(searchText));
-            break;
-        case G_DOUBLE_TAP:
-            if (![header hitTest:payload.swipe.location]) break;
-            header.frame = RECT(24, 72, sw - 48, 64);
-            header.cornerRadius = 32;
-            searchIcon.frame = RECT(L(header) + 24, CENTER_Y(header, 20), 20, 20);
-            settingsIcon.frame = RECT(RA(header) - 22 - 24, CENTER_Y(header, 18), 22, 18);
-            searchText.frame = RECT(CENTER_BETWEEN(searchIcon, settingsIcon, header, 20, 16));
-            break;
-        default:
-            break;
-    }
-    
-    [CATransaction commit];
+    under2 = [self
+        createLayer:[self X:0 Y:BY(under1) + 16 W:WIDTH(scroll) H:64]
+        background:[UIColor blueColor]];
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     self.view.backgroundColor = [UIColor colorNamed:@"Background"];
-    sw = [UIScreen mainScreen].bounds.size.width;
-    sh = [UIScreen mainScreen].bounds.size.height;
+    SW = [UIScreen mainScreen].bounds.size.width;
+    SH = [UIScreen mainScreen].bounds.size.height;
+    
+    UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
+    [appearance configureWithOpaqueBackground];
+    appearance.backgroundColor = [UIColor clearColor];
+    appearance.shadowColor = nil;
+    self.navigationController.navigationBar.standardAppearance = appearance;
+    self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
 
     [self ui];
+    [self.view.layer addSublayer:header];
+    [self.view addSubview:scroll];
+        [scroll.layer addSublayer:under1];
+        [scroll.layer addSublayer:under2];
+}
+
+//
+
+typedef enum { S_VERTICAL, S_HORIZONTAL } ScrollDirction;
+- (UIScrollView *)createScroll:(CGRect)frame diration:(ScrollDirction)dir {
+    UIScrollView *_s = [[UIScrollView alloc] initWithFrame:frame];
+    _s.bounces = YES;
+    _s.decelerationRate = UIScrollViewDecelerationRateNormal;
+    _s.scrollEnabled = YES;
+    _s.clipsToBounds = YES;
+    _s.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+
+    if (dir == S_VERTICAL) {
+        _s.contentSize = CGSizeMake(CGRectGetWidth(frame), 2000);
+        _s.alwaysBounceVertical = YES;
+        _s.showsVerticalScrollIndicator = YES;
+        _s.showsHorizontalScrollIndicator = NO;
+    } else {
+        _s.contentSize = CGSizeMake(2000, CGRectGetHeight(frame));
+        _s.alwaysBounceHorizontal = YES;
+        _s.showsHorizontalScrollIndicator = YES;
+        _s.showsVerticalScrollIndicator = NO;
+    }
+
+    return _s;
+}
+
+- (CALayer *)createLayer:(CGRect)frame background:(UIColor *)background {
+    CALayer *_l = [CALayer new];
+    _l.frame = frame;
+    _l.backgroundColor = background.CGColor;
+    return _l;
+}
+
+- (CGRect)X:(CGFloat)x Y:(CGFloat)y W:(CGFloat)w H:(CGFloat)h {
+    return CGRectMake(x, y, w, h);
+}
+
+- (CGRect)TX:(CGFloat)tx TY:(CGFloat)ty BX:(CGFloat)bx BY:(CGFloat)by {
+    CGRect _r = CGRectMake(tx, ty, bx - tx, by - ty);
+    return _r;
 }
 
 @end
